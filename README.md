@@ -39,6 +39,8 @@
 2. 传参：支持显示每个CPU的独立状态
 3. 
 
+#### 参考文档
+* http://www.linuxhowtos.org/manpages/5/proc.htm
 
 
 

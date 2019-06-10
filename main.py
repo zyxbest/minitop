@@ -32,19 +32,12 @@ MEMINFO_FILE = "/proc/meminfo"
 MEMINFO_KEY = "KiB Mem "
 SWAP_KEY = "KiB Swap"
 
-VMINFO_FILE = "/proc/vmstat"
-
 CPU_KEY = "Cpu(s)"
 CPUSTAT_FILE = "/proc/stat"
-# from procps:
-# ought to count CPUs in /proc/stat instead of relying  on glibc, which
-# foolishly tries to parse /proc/cpuinfo
 
 
 def output_info(info_key, info_value, newline=True):
     print "|{:12s} : {:80s}|".format(info_key, info_value)
-    # if newline:
-    # print "\n"
 
 
 def read_info_file(file_path):
@@ -73,14 +66,13 @@ def get_cpu(detailed=False):
     # TODO:传参显示每个CPU的使用率
     cpu_info_format = '{user:.2f} us,  {system:.2f} sy,  {nice:.2f} ni, {idle:.2f} id,  {wa:.2f} wa,  {hi:.2f} hi,  {si:.2f} si,  {st:.2f} st'
     total_cpu_info = read_info_file(CPUSTAT_FILE).split('\n')[0].strip()
-    cuser, cnice, csystem, cidle, ciow, chirq, csirq, xx, yy, zz  = \
+    cuser, cnice, csystem, cidle, ciow, chirq, csirq, csteal, cguest, cguest_nice  = \
         [int(item) for item in total_cpu_info.split()[1:]]
 
     total_jiffies = float(cuser + csystem + cnice +
                           cidle + ciow + chirq + csirq)
-    print total_cpu_info
-    print total_jiffies
-    print cpu_info_format.format(
+
+    return cpu_info_format.format(
         user=cuser / total_jiffies * 100,
         system=csystem / total_jiffies * 100,
         nice=cnice / total_jiffies * 100,
@@ -88,9 +80,8 @@ def get_cpu(detailed=False):
         wa=ciow / total_jiffies * 100,
         hi=chirq / total_jiffies * 100,
         si=csirq / total_jiffies * 100,
-        st=0
+        st=csteal / total_jiffies * 100
     )
-    return
 
 
 def get_mem():
@@ -168,7 +159,7 @@ def get_system_info():
     output_info(LOADAVG_KEY, load_str)
 
     cpu_str = get_cpu()
-    output_info(CPU_KEY, '100%')
+    output_info(CPU_KEY, cpu_str)
 
     mem_str, swap_mem_str = get_mem()
     output_info(MEMINFO_KEY, mem_str)
