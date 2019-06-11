@@ -272,10 +272,16 @@ def display_procs_list(procs_list, limit):
     if limit == -1:
         limit = len(procs_list)
 
+
     for proc in procs_list[:limit]:
+        #  truncate long user_name
+        user = proc.get('user', '')
+        if len(user) > 7:
+            user = user[:7] + '+'
+
         print('{pid:>5} {user:<10}{pr:>2}{ni:>5}{virt:>8}{res:>7}{shr:>7}{s:>2}{cpu:>6.1f}{mem:>6.1f} {time:>10} {command}'.format(
             pid=proc.get('pid', ''),
-            user=proc.get('user', ''),
+            user=user,
             pr=proc.get('priority', ''),
             ni=proc.get('ni', ''),
             virt=proc.get('virt', ''),
