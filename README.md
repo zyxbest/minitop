@@ -7,7 +7,8 @@
 
 #### usage
 ```
-git clone {THIS_REPO_URL}
+git clone https://github.com/qrr1995/minitop
+cd minitop
 python minitop.py
 ```
 
@@ -49,7 +50,6 @@ Keep watching minitop by 1 second fresh-interval
 ```
 watch -n 1 minitop
 ```
-
 
 Sort  by memory
 ```
