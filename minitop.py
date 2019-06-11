@@ -10,7 +10,6 @@ import pwd
 import argparse
 
 
-
 STAT_FILE = "/proc/stat"
 
 USERS_KEY = "users"
@@ -173,14 +172,6 @@ def get_system_info():
 
     print("-" * 96)
 
-
-def get_proc_status(pid):
-    # see `/proc/pid/status` and `/proc/pid/stat`
-    procs_status_file = "/proc/{}/stat".format(pid)
-    proc_state = read_file(procs_status_file).split()[2]
-    print(proc_state)
-
-
 # May suport screen fresh  in FUTURE,see
 # https://gitlab.com/procps-ng/procps/blob/master/ps/display.c#L322
 def get_cpu_percent(procs_stat_list, include_childten=False):
@@ -198,9 +189,6 @@ def get_cpu_percent(procs_stat_list, include_childten=False):
     cpu_percent = 100 * ((used_jiffies / HERTZ) / seconds)
     return cpu_percent
 
-#   used_jiffies = buf->utime + buf->stime;
-
-
 def get_shared_memory(pid):
     '''
     Firstly get shared pages first, than convert it to K.
@@ -213,20 +201,22 @@ def get_shared_memory(pid):
     shared_pages = int(read_file(statm_file).split()[2])
     shared_memory = shared_pages
 
-
     tmp_page_size = PAGE_SIZE
     while tmp_page_size > 1024:
         tmp_page_size = tmp_page_size >> 1
         shared_memory = shared_memory << 1
     return shared_memory
 
-'''
-Generate a process dict from pid.
-Carefully looks up man page of proc(5) and top(1) which make all things easier!
-Notice the CPU definition： The task's share of the elapsed CPU time since the last screen update
-About Cpu,see https://gitlab.com/procps-ng/procps/blob/master/ps/display.c#L322
-'''
+
+
+
 def get_item_by_pid(pid):
+    '''
+    Generate a process dict from pid.
+    Carefully looks up man page of proc(5) and top(1) which make all things easier!
+    Notice the CPU definition： The task's share of the elapsed CPU time since the last screen update
+    About Cpu,see https://gitlab.com/procps-ng/procps/blob/master/ps/display.c#L322
+    '''
     procs_status_file = "/proc/{}/status".format(pid)
 
     pid_status_dict = {}
@@ -247,7 +237,7 @@ def get_item_by_pid(pid):
         user_name = str(user_uid)
 
     # eg data : 1 (systemd) S 0 1 1 0 -1 4194560 23103 3398035 50 1125 12321 19185 10044 6227 20 0 1 0 4 38907904 1495 18446744073709551615 1 1 0 0 0 0 671173123 4096 1260 0 0 0 17 0 0 0 94 0 0 0 0 0 0 0 0 0 0
-    # meaning: pid,comm,state,ppid,pgrp,session,tty,tpgid,9others,priority,nice
+    # meaning: http://man7.org/linux/man-pages/man5/proc.5.html
     procs_stat_file = "/proc/{}/stat".format(pid)
     procs_stat_list = read_file(procs_stat_file).split()
     cpu_percent = get_cpu_percent(procs_stat_list)
@@ -299,7 +289,6 @@ def display_procs_list(procs_list, limit):
     if limit == -1:
         limit = len(procs_list)
 
-
     for proc in procs_list[:limit]:
         #  truncate long user_name
         user = proc.get('user', '')
@@ -331,6 +320,7 @@ def set_hertz():
         print('fail to exec `getconf CLK_TCK` command, use default HERTZ value:{}'.format(HERTZ))
         raise e
     return True
+
 
 def set_pagesize():
     global PAGE_SIZE

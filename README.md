@@ -115,6 +115,7 @@ KiB Swap:        0 total,        0 free,        0 used.  3065216 avail Mem
 * [ ] 输出样式上的细节,比如大数、时间的单位转换等。
 * [ ] 计算CPU时间的函数，需要获取hertz参数，目前用的是os.system执行`getconf CLK_TCK`命令，除了C语言调用的相关库之外，是否存在更好的获得方式？
 * [ ] 类似地，计算shared memory时将page转化为memory，用的pagesize也是用`getconf PAGESIZE`获取的。
+* [ ] 更好的打包方式（现在牺牲可读性将所有函数放一个py里）
 
 #### 参考资料
 * http://man7.org/linux/man-pages/man1/top.1.html
