@@ -1,6 +1,7 @@
 ## minitop 
 
 #### requirement
+* Linux kernel os
 * Python 2.7+
 * partly suport python 3+ (Still have format issues yet)
 * No third-party-package requirement.
