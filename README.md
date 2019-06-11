@@ -14,33 +14,27 @@ python minitop.py
 sample output:
 ```
 ------------------------------------------------------------------------------------------------
-|uptime       : 1:6:828                                                                         |
-|users        : 1                                                                               |
-|load average : 0.20,0.29,0.27                                                                  |
-|Cpu(s)       : 4.53 us,  3.04 sy,  0.00 ni, 92.22 id,  0.11 wa,  0.00 hi,  0.09 si,  0.00 st   |
-|KiB Mem      : 4039668 total, 1045476 free, 622904 used, 2371288 buff/cache, 3035684 avail Mem |
+|uptime       : 1days 7:5:23                                                                    |
+|users        : 2                                                                               |
+|load average : 0.00,0.11,0.24                                                                  |
+|Cpu(s)       : 4.53 us,  3.04 sy,  0.01 ni, 92.23 id,  0.11 wa,  0.00 hi,  0.09 si,  0.00 st   |
+|KiB Mem      : 4039668 total, 1027652 free, 630804 used, 2381212 buff/cache, 3026796 avail Mem |
 |KiB Swap     : 0 total, 0 free, 0 used                                                         |
 ------------------------------------------------------------------------------------------------
-Tasks: 135 total,   1 running,  91 sleeping,   0 stopped,   0 zombie
+Tasks: 139 total,   1 running,  94 sleeping,   0 stopped,   0 zombie
   PID USER      PR   NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
 ------------------------------------------------------------------------------------------------
-    1 root      20    0   37996   5980   3928 S   0.4   0.1      7:0.5 systemd
-    2 root      20    0       0      0      0 S   0.0   0.0     0:0.03 kthreadd
-    4 root       0  -20       0      0      0 I   0.0   0.0      0:0.0 kworker/0:0H
-    6 root       0  -20       0      0      0 I   0.0   0.0      0:0.0 mm_percpu_wq
-    7 root      20    0       0      0      0 S   0.0   0.0    0:22.54 ksoftirqd/0
-    8 root      20    0       0      0      0 I   0.1   0.0    1:32.87 rcu_sched
-    9 root      20    0       0      0      0 I   0.0   0.0      0:0.0 rcu_bh
-   10 root      rt    0       0      0      0 S   0.0   0.0     0:1.13 migration/0
-   11 root      rt    0       0      0      0 S   0.0   0.0     0:0.26 watchdog/0
-   12 root      20    0       0      0      0 S   0.0   0.0      0:0.0 cpuhp/0
-   13 root      20    0       0      0      0 S   0.0   0.0      0:0.0 cpuhp/1
-   14 root      rt    0       0      0      0 S   0.0   0.0     0:0.29 watchdog/1
-   15 root      rt    0       0      0      0 S   0.0   0.0     0:1.08 migration/1
-   16 root      20    0       0      0      0 S   0.0   0.0    0:19.14 ksoftirqd/1
-   18 root       0  -20       0      0      0 I   0.0   0.0      0:0.0 kworker/1:0H
-   19 root      20    0       0      0      0 S   0.0   0.0      0:0.0 kdevtmpfs
-   20 root       0  -20       0      0      0 I   0.0   0.0      0:0.0 netns  
+ 2848 root      20    0  406788 268208  66836 S   2.8   6.6    52:5.89 kube-apiserver
+ 1183 root      20    0  706416 104052  63744 S   3.9   2.6   71:53.38 kubelet
+ 2982 root      20    0  216864  96936  55736 S   1.5   2.4   28:18.31 kube-controller
+ 1438 root      20    0  599792  88676  37716 S   1.3   2.2   24:45.54 dockerd
+ 2766 root      20    010554916  52080  17816 S   1.6   1.3   30:46.79 etcd
+ 1414 root      20    0 1167140  45016  24952 S   0.2   1.1     3:17.7 containerd
+ 2916 root      20    0  141508  36956  27212 S   0.1   0.9    2:40.98 kube-scheduler
+ 5250 root      20    0  142288  32424  25460 S   0.3   0.8    5:56.32 coredns
+ 5028 root      20    0  142288  32176  25140 S   0.3   0.8    6:11.29 coredns
+ 3886 root      20    0  138988  31724  24408 S   0.1   0.8    1:33.86 kube-proxy
+ 4223 root      20    0  332564  28680  21780 S   0.1   0.7    1:23.85 flanneld
 ```
 
 
@@ -90,27 +84,18 @@ minitop -s M -l -1
 4. 其他方面包含的比较广，比如排序，比如显示命令等，这些都是对已获取信息的组织、呈现，属于编码过程中的part2，一律作为次优先feature来实现。
 5. 关于显示的column选取，由于top能够显示的信息过多（最多高达50项），选定当前版本边界为实现top的默认视图，即包含以下示例信息即可：
 ```
-------------------------------------------------------------------------------------------------
-|uptime       : 1days 7:5:23                                                                    |
-|users        : 2                                                                               |
-|load average : 0.00,0.11,0.24                                                                  |
-|Cpu(s)       : 4.53 us,  3.04 sy,  0.01 ni, 92.23 id,  0.11 wa,  0.00 hi,  0.09 si,  0.00 st   |
-|KiB Mem      : 4039668 total, 1027652 free, 630804 used, 2381212 buff/cache, 3026796 avail Mem |
-|KiB Swap     : 0 total, 0 free, 0 used                                                         |
-------------------------------------------------------------------------------------------------
-Tasks: 139 total,   1 running,  94 sleeping,   0 stopped,   0 zombie
-  PID USER      PR   NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND
-------------------------------------------------------------------------------------------------
- 2848 root      20    0  406788 268208  66836 S   2.8   6.6    52:5.89 kube-apiserver
- 1183 root      20    0  706416 104052  63744 S   3.9   2.6   71:53.38 kubelet
- 2982 root      20    0  216864  96936  55736 S   1.5   2.4   28:18.31 kube-controller
- 1438 root      20    0  599792  88676  37716 S   1.3   2.2   24:45.54 dockerd
- 2766 root      20    010554916  52080  17816 S   1.6   1.3   30:46.79 etcd
- 1414 root      20    0 1167140  45016  24952 S   0.2   1.1     3:17.7 containerd
- 2916 root      20    0  141508  36956  27212 S   0.1   0.9    2:40.98 kube-scheduler
- 5250 root      20    0  142288  32424  25460 S   0.3   0.8    5:56.32 coredns
- 5028 root      20    0  142288  32176  25140 S   0.3   0.8    6:11.29 coredns
- 3886 root      20    0  138988  31724  24408 S   0.1   0.8    1:33.86 kube-proxy  
+Tasks: 136 total,   1 running,  95 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  5.9 us,  0.0 sy,  0.0 ni, 94.1 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+KiB Mem :  4039668 total,  1237124 free,   613512 used,  2189032 buff/cache
+KiB Swap:        0 total,        0 free,        0 used.  3065216 avail Mem 
+
+  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND                        
+    1 root      20   0   37996   5980   3928 S   0.0  0.1   2:47.72 systemd                        
+    2 root      20   0       0      0      0 S   0.0  0.0   0:00.01 kthreadd                       
+    4 root       0 -20       0      0      0 I   0.0  0.0   0:00.00 kworker/0:0H                   
+    6 root       0 -20       0      0      0 I   0.0  0.0   0:00.00 mm_percpu_wq                   
+    7 root      20   0       0      0      0 S   0.0  0.0   0:08.71 ksoftirqd/0                    
+    8 root      20   0       0      0      0 I   0.0  0.0   0:38.53 rcu_sched          
 ```
 
 #### 准备
