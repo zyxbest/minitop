@@ -1,6 +1,42 @@
 ## minitop 
 
+#### requirement
+* Python 2.7+
+* partly suport python 3+ (Still have format issues yet)
+* No third-party-package requirement.
 
+#### usage
+```
+git clone {THIS_REPO_URL}
+python minitop.py
+```
+
+Also you could place the py into bin dir,since it's a single py script.
+```
+chmod +x minitop.py
+sudo mv minitop.py /usr/bin/minitop
+minitop
+```   
+
+Sort  by memory
+```
+minitop -s M 
+```
+
+Show top 10 most cpu used process
+```
+minitop -s P -l 10
+```
+
+Show all process sorted by memory usage
+```
+minitop -s M -l -1
+```
+
+
+
+
+## 解题思路
 #### 要求
 - 实现必要的几个输出如：users，uptime，load，cpu，memory，process
 - 其他方面请尽量还原原有 top
@@ -35,21 +71,13 @@ KiB Swap:        0 total,        0 free,        0 used.  3065216 avail Mem
 3. 接下来就是coding, 注意事项：
     * macOS没有对应的目录，内核问题导致具体机制不同。
     * 避免使用第三方包
-    * 作为一个子集，不应该顺手加新功能
-
-
-
-#### 开发步骤
-1. Dev：一个简单的python文件，通过功能测试
-2. Package：打包成bin
-3. Benchmarking：做一定的性能评估与各平台兼容性测试
-4. Doc：整理readme，快速下载，使用
-
+    * 作为一个子集，不应顺手加新功能
 
 #### TODO
-1. 传参：支持进程排序
-2. 传参：支持显示每个CPU的独立状态
-3. 
+1. 传参：支持显示每个CPU的独立状态
+2. 支持动态刷新，以更科学地计算CPU使用率
+3. 支持读取二进制文件来获取用户数，而不是用os.system来执行w命令
+4. 更多的测试
 
 #### 参考资料
 * http://man7.org/linux/man-pages/man1/top.1.html

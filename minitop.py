@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # Author: Yixuan Zhao <johnsonqrr (at) gmail.com>
+from __future__ import print_function
+from collections import Counter
 
 import os
 import datetime
 import pwd
+import argparse
+
 
 
 STAT_FILE = "/proc/stat"
@@ -37,7 +41,7 @@ HERTZ = 100
 
 
 def output_info(info_key, info_value, newline=True):
-    print "|{:12s} : {:80s}|".format(info_key, info_value)
+    print("|{:12s} : {:80s}|".format(info_key, info_value))
 
 
 def read_file(file_path):
@@ -46,7 +50,7 @@ def read_file(file_path):
         with open(file_path, 'r') as f:
             return f.read().strip()
     except Exception as e:
-        print read_proc_fail_msg
+        print(read_proc_fail_msg)
         raise e
 
 
@@ -143,11 +147,14 @@ def get_mem():
 
 
 def get_system_info():
-    print "-" * 96
+    print("-" * 96)
 
     global UPTIME
     UPTIME = uptime_secs = get_uptime()
-    uptime_str = str(datetime.timedelta(seconds=int(uptime_secs)))
+    uptime_secs = int(uptime_secs)
+    uptime_str = '{}:{}:{}'.format(
+        uptime_secs / 86400, uptime_secs % 86400 / 3600, uptime_secs % 3600)
+
     output_info(UPTIME_KEY, uptime_str)
 
     users_num_str = str(get_users())
@@ -163,14 +170,14 @@ def get_system_info():
     output_info(MEMINFO_KEY, mem_str)
     output_info(SWAP_KEY, swap_mem_str)
 
-    print "-" * 96
+    print("-" * 96)
 
 
 def get_proc_status(pid):
     # see `/proc/pid/status` and `/proc/pid/stat`
     procs_status_file = "/proc/{}/stat".format(pid)
     proc_state = read_file(procs_status_file).split()[2]
-    print proc_state
+    print(proc_state)
 
 
 # May suport screen fresh  in FUTURE,see
@@ -186,8 +193,6 @@ def get_cpu_percent(procs_stat_list, include_childten=False):
 
     # 如果要统计一段时间内的使用率，这里对cpu 时间和seconds取delta即可
     cpu_percent = 100 * ((used_jiffies / HERTZ) / seconds)
-    # print used_jiffies / HERTZ
-    # print seconds
     return cpu_percent
 
 #   used_jiffies = buf->utime + buf->stime;
@@ -211,11 +216,9 @@ def get_item_by_pid(pid):
         v = v.split()[0]
         pid_status_dict[k] = v
 
-    # print pid_status_dict
     user_uid = os.stat('/proc/{}'.format(pid)).st_uid
     user_name = pwd.getpwuid(user_uid)[0]
 
-    #-----
     # eg data : 1 (systemd) S 0 1 1 0 -1 4194560 23103 3398035 50 1125 12321 19185 10044 6227 20 0 1 0 4 38907904 1495 18446744073709551615 1 1 0 0 0 0 671173123 4096 1260 0 0 0 17 0 0 0 94 0 0 0 0 0 0 0 0 0 0
     # meaning: pid,comm,state,ppid,pgrp,session,tty,tpgid,9others,priority,nice
     procs_stat_file = "/proc/{}/stat".format(pid)
@@ -230,15 +233,17 @@ def get_item_by_pid(pid):
         'ni': procs_stat_list[18],
         'virt': pid_status_dict.get('VmSize', '0'),
         # RES = sum of (RSan + RSfd +RSsh) ,  get it from VmRSS key
-        'res': pid_status_dict.get('VmRSS', '0'), 
+        'res': pid_status_dict.get('VmRSS', '0'),
         'shr': int(pid_status_dict.get('RssShmem', '0')) + int(pid_status_dict.get('RssFile', '0')),
         'state': pid_status_dict.get('State', ''),
         'cpu_percent': cpu_percent,
         'mem_percent': 100 * float(pid_status_dict.get('VmRSS', '0')) / (TOTAL_PHYSICAL_MEMORY),
-        'cpu_time': int(procs_stat_list[13]) + int(procs_stat_list[14]),   # ?
-        'cmd': read_file("/proc/{}/cmdline".format(pid)) 
+        'cpu_time': (int(procs_stat_list[13]) + int(procs_stat_list[14])) / float(HERTZ),
+        'cmd': read_file("/proc/{}/cmdline".format(pid))
     }
-    item['cpu_time'] = str(datetime.timedelta(seconds=item['cpu_time']))
+
+    item['cpu_time'] = '{}:{}'.format(
+        int(item['cpu_time']) / 60, item['cpu_time'] % 60)
 
     if item['priority'] == '-100':
         item['priority'] = 'rt'
@@ -261,10 +266,14 @@ def get_procs_list():
     return procs_list
 
 
-def display_procs_list(procs_list, limit=20):
+def display_procs_list(procs_list, limit):
+    print("  PID USER      PR   NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND")
+    print("-" * 96)
+    if limit == -1:
+        limit = len(procs_list)
 
     for proc in procs_list[:limit]:
-        print '{pid:>5} {user:<10}{pr:>2}{ni:>5}{virt:>8}{res:>7}{shr:>7}{s:>2}{cpu:>6.1f}{mem:>6.1f} {time:>10} {command}'.format(
+        print('{pid:>5} {user:<10}{pr:>2}{ni:>5}{virt:>8}{res:>7}{shr:>7}{s:>2}{cpu:>6.1f}{mem:>6.1f} {time:>10} {command}'.format(
             pid=proc.get('pid', ''),
             user=proc.get('user', ''),
             pr=proc.get('priority', ''),
@@ -277,7 +286,8 @@ def display_procs_list(procs_list, limit=20):
             mem=proc.get('mem_percent', ''),
             time=proc.get('cpu_time', ''),
             command=proc.get('name', '')
-        )
+        ))
+    print("-" * 96)
 
 
 def set_hertz():
@@ -285,36 +295,62 @@ def set_hertz():
     try:
         HERTZ = int(os.popen('getconf CLK_TCK').read().strip())
     except Exception as e:
-        print 'fail to exec `getconf CLK_TCK` command, use default HERTZ value:{}'.format(HERTZ)
+        print('fail to exec `getconf CLK_TCK` command, use default HERTZ value:{}'.format(HERTZ))
         raise e
     return True
+
 
 def sort_procs_list(procs_list, sort_key):
     if sort_key in procs_list[0]:
         procs_list.sort(key=lambda item: item[sort_key], reverse=True)
     else:
-        print 'Ignore meaningless key: {}'.format(sort_key)
+        print('Ignore meaningless key: {}'.format(sort_key))
         return
 
 
-def get_process_info(sort_key=None, limit=30, truncate=0):
-    print "  PID USER      PR   NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND"
-    print "-" * 96
+def displey_procs_counter(procs_list):
+    task_counter = Counter()
+    for proc in procs_list:
+        task_counter[proc['state']] += 1
+    print('Tasks: {} total,   {} running,  {} sleeping,   {} stopped,   {} zombie'.format(
+        len(procs_list),
+        task_counter['R'],
+        task_counter['S'],
+        task_counter['T'],
+        task_counter['Z']
+    ))
 
+
+def get_process_info(sort_key, limit, truncate=0):
     set_hertz()
 
     procs_list = get_procs_list()
+
     if sort_key:
         sort_procs_list(procs_list, sort_key=sort_key)
 
+    displey_procs_counter(procs_list)
     display_procs_list(procs_list, limit=limit)
 
-    print "-" * 96
+
+sort_key_map = {
+    'M': 'mem_percent',
+    'P': 'cpu_percent'
+}
 
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-s', '--sort', help='sort key, choices: M for memory, P for cpu')
+    parser.add_argument(
+        '-l', '--limit', help='limit of the process, set to 20 by default, set to -1 as no limit')
+    args = parser.parse_args().__dict__
+    sort_key = sort_key_map.get(args.get('sort'))
+    limit = int(args.get('limit') or '20')
+
     get_system_info()
-    get_process_info()
+    get_process_info(sort_key=sort_key, limit=limit)
 
 if __name__ == '__main__':
     main()
