@@ -38,6 +38,7 @@ In the meantime, run \"mount proc /proc -t proc\"
 TOTAL_PHYSICAL_MEMORY = 0
 UPTIME = 0
 HERTZ = 100
+PAGE_SIZE = 4096
 
 
 def output_info(info_key, info_value, newline=True):
@@ -152,8 +153,8 @@ def get_system_info():
     global UPTIME
     UPTIME = uptime_secs = get_uptime()
     uptime_secs = int(uptime_secs)
-    uptime_str = '{}:{}:{}'.format(
-        uptime_secs / 86400, uptime_secs % 86400 / 3600, uptime_secs % 3600)
+    uptime_str = '{}days {}:{}:{}'.format(
+        uptime_secs / 86400, uptime_secs % 86400 / 3600, uptime_secs % 3600 / 60, uptime_secs % 60)
 
     output_info(UPTIME_KEY, uptime_str)
 
@@ -183,9 +184,11 @@ def get_proc_status(pid):
 # May suport screen fresh  in FUTURE,see
 # https://gitlab.com/procps-ng/procps/blob/master/ps/display.c#L322
 def get_cpu_percent(procs_stat_list, include_childten=False):
-    # cpu使用率 = cpu使用时间 / 进程启动至今时间
-    # cpu使用时间 需要用Hertz来换算成秒
-    # 启动至今时间 = 机器启动至今时长 - 进程启动时刻（从机器启动开始计算，因此可以作为时间间隔）
+    '''
+    cpu使用率 = cpu使用时间 / 进程启动至今时间
+    cpu使用时间 需要用Hertz来换算成秒
+    启动至今时间 = 机器启动至今时长 - 进程启动时刻（从机器启动开始计算，因此可以作为时间间隔）
+    '''
     used_jiffies = int(procs_stat_list[13]) + int(procs_stat_list[14])
 
     start_time = int(procs_stat_list[21])
@@ -198,11 +201,31 @@ def get_cpu_percent(procs_stat_list, include_childten=False):
 #   used_jiffies = buf->utime + buf->stime;
 
 
-# Generate a process dict from pid.
-# Carefully looks up man page of proc(5) and top(1) which make all things easier!
-# Notice the CPU definition： The task's share of the elapsed CPU time since the last screen update
-# About Cpu,see
-# https://gitlab.com/procps-ng/procps/blob/master/ps/display.c#L322
+def get_shared_memory(pid):
+    '''
+    Firstly get shared pages first, than convert it to K.
+    see https://gitlab.com/procps-ng/procps/blob/master/proc/readproc.c#L659
+    & https://gitlab.com/procps-ng/procps/blob/master/top/top.c#L6160
+    memorys = pages << Pg2K_shft
+    '''
+
+    statm_file = '/proc/{pid}/statm'.format(pid=pid)
+    shared_pages = int(read_file(statm_file).split()[2])
+    shared_memory = shared_pages
+
+
+    tmp_page_size = PAGE_SIZE
+    while tmp_page_size > 1024:
+        tmp_page_size = tmp_page_size >> 1
+        shared_memory = shared_memory << 1
+    return shared_memory
+
+'''
+Generate a process dict from pid.
+Carefully looks up man page of proc(5) and top(1) which make all things easier!
+Notice the CPU definition： The task's share of the elapsed CPU time since the last screen update
+About Cpu,see https://gitlab.com/procps-ng/procps/blob/master/ps/display.c#L322
+'''
 def get_item_by_pid(pid):
     procs_status_file = "/proc/{}/status".format(pid)
 
@@ -217,7 +240,11 @@ def get_item_by_pid(pid):
         pid_status_dict[k] = v
 
     user_uid = os.stat('/proc/{}'.format(pid)).st_uid
-    user_name = pwd.getpwuid(user_uid)[0]
+    try:
+        # 一些uid无法映射到用户名，比如某些数据库的999
+        user_name = pwd.getpwuid(user_uid)[0]
+    except:
+        user_name = str(user_uid)
 
     # eg data : 1 (systemd) S 0 1 1 0 -1 4194560 23103 3398035 50 1125 12321 19185 10044 6227 20 0 1 0 4 38907904 1495 18446744073709551615 1 1 0 0 0 0 671173123 4096 1260 0 0 0 17 0 0 0 94 0 0 0 0 0 0 0 0 0 0
     # meaning: pid,comm,state,ppid,pgrp,session,tty,tpgid,9others,priority,nice
@@ -234,7 +261,7 @@ def get_item_by_pid(pid):
         'virt': pid_status_dict.get('VmSize', '0'),
         # RES = sum of (RSan + RSfd +RSsh) ,  get it from VmRSS key
         'res': pid_status_dict.get('VmRSS', '0'),
-        'shr': int(pid_status_dict.get('RssShmem', '0')) + int(pid_status_dict.get('RssFile', '0')),
+        'shr': get_shared_memory(pid),
         'state': pid_status_dict.get('State', ''),
         'cpu_percent': cpu_percent,
         'mem_percent': 100 * float(pid_status_dict.get('VmRSS', '0')) / (TOTAL_PHYSICAL_MEMORY),
@@ -305,6 +332,15 @@ def set_hertz():
         raise e
     return True
 
+def set_pagesize():
+    global PAGE_SIZE
+    try:
+        PAGE_SIZE = int(os.popen('getconf PAGESIZE').read().strip())
+    except Exception as e:
+        print('fail to exec `getconf PAGESIZE` command, use default HERTZ value:{}'.format(HERTZ))
+        raise e
+    return True
+
 
 def sort_procs_list(procs_list, sort_key):
     if sort_key in procs_list[0]:
@@ -329,6 +365,7 @@ def displey_procs_counter(procs_list):
 
 def get_process_info(sort_key, limit, truncate=0):
     set_hertz()
+    set_pagesize()
 
     procs_list = get_procs_list()
 
