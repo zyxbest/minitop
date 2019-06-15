@@ -3,7 +3,7 @@
 #### requirement
 * Linux kernel os
 * Python 2.7+
-* partly suport python 3+ (Still have format issues yet)
+* Partly support Python 3 (Still have format issues yet)
 * No third-party-package requirement.
 
 #### usage
@@ -57,12 +57,12 @@ Sort  by memory
 minitop -s M 
 ```
 
-Show top 10 most cpu used process
+Show top 10 most cpu used processes
 ```
 minitop -s P -l 10
 ```
 
-Show all process sorted by memory usage
+Show all processes sorted by memory usage.
 ```
 minitop -s M -l -1
 ```
@@ -72,7 +72,7 @@ minitop -s M -l -1
 
 ## 解题思路
 #### 要求
-- 实现必要的几个输出如：users，uptime，load，cpu，memory，process
+- 实现必要的几个输出如：users,uptime,load,cpu,memory,process
 - 其他方面请尽量还原原有 top
 - 展现形式可以不用实时刷新
 - 实现上尽量高效(不要使用 ps 等命令)

@@ -362,7 +362,7 @@ def get_process_info(sort_key, limit, truncate=0):
     if sort_key:
         sort_procs_list(procs_list, sort_key=sort_key)
 
-    displey_procs_counter(procs_list)
+    display_procs_counter(procs_list)
     display_procs_list(procs_list, limit=limit)
 
 
