@@ -4,8 +4,6 @@
 
 
 
-
-
 #### requirement
 * Linux kernel os
 * Python 2.7+
